@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Protocol, TypeVar, Generic, Container, Sized, Iterator
+from typing import Protocol, TypeVar, Generic, Container, Sized, Iterator
 from abc import ABC, abstractmethod
 
 
@@ -14,14 +14,19 @@ Value = TypeVar("Value")
 
 class HeapQueryTrait(Generic[Key, Value], ABC):
     @abstractmethod
-    def find_min(self) -> Optional[tuple[Key, Value]]:
+    def find_min(self) -> tuple[Key, Value]:
         """
         Find the minimum key-value pair in the heap.
 
         Returns
         -------
-        Optional[tuple[Key, Value]]
+        tuple[Key, Value]
             The minimum key-value pair in the heap.
+
+        Raises
+        ------
+        IndexError
+            If the heap is empty.
         """
         pass
 
@@ -59,7 +64,7 @@ class HeapMutationTrait(Generic[Key, Value], ABC):
         pass
 
     @abstractmethod
-    def replace(self, key: Key, value: Value) -> Optional[tuple[Key, Value]]:
+    def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
         """
         Pop the minimum key-value pair in the heap and push a new key-value pair
         into the heap.
@@ -73,7 +78,7 @@ class HeapMutationTrait(Generic[Key, Value], ABC):
 
         Returns
         -------
-        Optional[tuple[Key, Value]]
+        tuple[Key, Value]
             The minimum key-value pair in the heap.
         """
         pass
