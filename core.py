@@ -12,6 +12,23 @@ class Comparable(Protocol):
 
 Key = TypeVar("Key", bound=Comparable)
 Value = TypeVar("Value")
+NodeType = TypeVar("NodeType", bound="AbstractNode")
+
+
+@dataclass(slots=True)
+class AbstractNode(Generic[Key, Value, NodeType]):
+    key: Key
+    value: Value
+
+    def swap_keys_and_values(self, other: AbstractNode) -> None:
+        self.key, other.key = other.key, self.key
+        self.value, other.value = other.value, self.value
+
+
+class HasNode(Generic[Key, Value, NodeType], ABC):
+    @abstractmethod
+    def _node(self, key: Key, value: Value) -> NodeType:
+        pass
 
 
 class HeapQueryTrait(Generic[Key, Value], ABC):
