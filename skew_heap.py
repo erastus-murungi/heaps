@@ -4,10 +4,7 @@ from core import Key, NodeType, Value
 
 class SkewHeap(BinaryHeapTree[Key, Value]):
     def _push_node(self, node: NodeType):
-        if self.root is None:
-            self.root = node
-        else:
-            self.root = self._skew_merge(self.root, node)
+        self.root = node if self.root is None else self._skew_merge(self.root, node)
 
     def pop(self) -> tuple[Key, Value]:
         key_value = self.find_min()
