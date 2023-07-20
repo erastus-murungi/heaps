@@ -3,16 +3,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from heapq import heapify, heappop, heappush, heapreplace
-from typing import Optional
+from typing import Optional, Generic, TypeVar
 
-from core import AbstractNode, Heap, Key, NodeType, Value
-
-
-class NoNode(AbstractNode):
-    pass
+from core import Heap, Key, Value
 
 
-class BinaryHeap(Heap[Key, Value, NoNode]):
+class BinaryHeap(Heap[Key, Value]):
     items: list[tuple[Key, Value]]
 
     def __init__(self, items: Optional[list[tuple[Key, Value]]] = None) -> None:
@@ -37,8 +33,26 @@ class BinaryHeap(Heap[Key, Value, NoNode]):
     def __len__(self) -> int:
         return len(self.items)
 
-    def _node(self, key: Key, value: Value) -> NoNode:
-        raise NotImplementedError("no node needed")
+
+NodeType = TypeVar("NodeType", bound="AbstractNode")
+
+
+class HasNode(Generic[Key, Value, NodeType], ABC):
+    @abstractmethod
+    def _node(self, key: Key, value: Value) -> NodeType:
+        pass
+
+
+@dataclass(slots=True)
+class AbstractNode(Generic[Key, Value, NodeType]):
+    key: Key
+    value: Value
+    left: NodeType | None = None
+    right: NodeType | None = None
+
+    def swap_keys_and_values(self, other: AbstractNode) -> None:
+        self.key, other.key = other.key, self.key
+        self.value, other.value = other.value, self.value
 
 
 class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
@@ -50,7 +64,7 @@ class NodeP(AbstractNode[Key, Value, "NodeP[Key, Value]"]):
     parent: NodeP[Key, Value] | None = None
 
 
-class HeapTree(Heap[Key, Value, NodeType], ABC):
+class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
     root: Optional[NodeType]
     size: int
 
@@ -63,10 +77,6 @@ class HeapTree(Heap[Key, Value, NodeType], ABC):
 
     @abstractmethod
     def _push_node(self, node: NodeType):
-        pass
-
-    @abstractmethod
-    def _node(self, key: Key, value: Value) -> NodeType:
         pass
 
     def find_min(self) -> tuple[Key, Value]:
@@ -112,7 +122,7 @@ class HeapTree(Heap[Key, Value, NodeType], ABC):
 
 
 class BinaryHeapTree(HeapTree[Key, Value, Node[Key, Value]]):
-    def _get_left_leaf_path(self) -> list[Node[Key, Value]]:
+    def _get_leftmost_leaf_path(self) -> list[Node[Key, Value]]:
         assert self.root is not None
         current = self.root
         path = [current]
@@ -125,7 +135,7 @@ class BinaryHeapTree(HeapTree[Key, Value, Node[Key, Value]]):
         if self.root is None:
             self.root = node
         else:
-            path = self._get_left_leaf_path()
+            path = self._get_leftmost_leaf_path()
             current = path[-1]
             current.left = node
             while path:
@@ -150,7 +160,7 @@ class BinaryHeapTree(HeapTree[Key, Value, Node[Key, Value]]):
 
     def pop(self) -> tuple[Key, Value]:
         if self.root is not None:
-            path = self._get_left_leaf_path()
+            path = self._get_leftmost_leaf_path()
             leaf = path[-1]
             root = self.root
             key_value = root.key, root.value
@@ -176,7 +186,7 @@ class BinaryHeapTree(HeapTree[Key, Value, Node[Key, Value]]):
 
 
 class BinaryHeapTreeP(HeapTree[Key, Value, NodeP[Key, Value]]):
-    def _get_lowest_node(self) -> NodeP[Key, Value]:
+    def _get_leftmost_leaf(self) -> NodeP[Key, Value]:
         assert self.root is not None
         current = self.root
         while current.left is not None:
@@ -194,7 +204,7 @@ class BinaryHeapTreeP(HeapTree[Key, Value, NodeP[Key, Value]]):
             self.root = node
         else:
             # Add the element to the bottom level of the heap at the leftmost open space.
-            current = self._get_lowest_node()
+            current = self._get_leftmost_leaf()
             current.left = node
             node.parent = current
             # bubble up
@@ -212,7 +222,7 @@ class BinaryHeapTreeP(HeapTree[Key, Value, NodeP[Key, Value]]):
 
     def pop(self) -> tuple[Key, Value]:
         if self.root is not None:
-            leaf = self._get_lowest_node()
+            leaf = self._get_leftmost_leaf()
             root = self.root
             key_value = root.key, root.value
             self.remove_leaf(leaf)

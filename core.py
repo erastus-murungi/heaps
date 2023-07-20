@@ -14,21 +14,6 @@ Key = TypeVar("Key", bound=Comparable)
 Value = TypeVar("Value")
 
 
-NodeType = TypeVar("NodeType", bound="AbstractNode")
-
-
-@dataclass(slots=True)
-class AbstractNode(Generic[Key, Value, NodeType]):
-    key: Key
-    value: Value
-    left: NodeType | None = None
-    right: NodeType | None = None
-
-    def swap_keys_and_values(self, other: AbstractNode) -> None:
-        self.key, other.key = other.key, self.key
-        self.value, other.value = other.value, self.value
-
-
 class HeapQueryTrait(Generic[Key, Value], ABC):
     @abstractmethod
     def find_min(self) -> tuple[Key, Value]:
@@ -101,16 +86,9 @@ class HeapMutationTrait(Generic[Key, Value], ABC):
         pass
 
 
-class HasNode(Generic[NodeType], ABC):
-    @abstractmethod
-    def _node(self, key: Key, value: Value) -> NodeType:
-        pass
-
-
 class Heap(
     HeapQueryTrait[Key, Value],
     HeapMutationTrait[Key, Value],
-    HasNode[NodeType],
     Container[Key],
     Sized,
     ABC,
