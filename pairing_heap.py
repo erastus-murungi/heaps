@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import reduce
 from typing import Generic, Optional
 
 from core import Heap, Key, Value
@@ -33,8 +34,10 @@ class PairingHeap(Heap[Key, Value]):
         heap1: Optional[Node[Key, Value]], heap2: Optional[Node[Key, Value]]
     ) -> Node[Key, Value]:
         if heap1 is None:
+            assert heap2 is not None
             return heap2
         elif heap2 is None:
+            assert heap1 is not None
             return heap1
         elif heap1.key > heap2.key:
             heap2.sub_heaps.append(heap1)
@@ -47,22 +50,12 @@ class PairingHeap(Heap[Key, Value]):
         self.root = self._meld(self.root, Node(key, value))
         self.size += 1
 
-    def _merge_pairs(self, heaps: list[Node[Key, Value]]):
-        if len(heaps) == 0:
-            return None
-        elif len(heaps) == 1:
-            return heaps[0]
-        else:
-            return self._meld(
-                self._meld(heaps[0], heaps[1]), self._merge_pairs(heaps[2:])
-            )
-
     def pop(self) -> tuple[Key, Value]:
         if self.root is None:
             raise IndexError("Empty heap")
         else:
             key, value = self.root.key, self.root.value
-            self.root = self._merge_pairs(self.root.sub_heaps)
+            self.root = reduce(self._meld, self.root.sub_heaps, None)
             self.size -= 1
             return key, value
 
