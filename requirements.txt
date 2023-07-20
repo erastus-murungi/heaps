@@ -1,0 +1,11 @@
+attrs==23.1.0
+flake8==6.0.0
+hypothesis==6.81.2
+iniconfig==2.0.0
+mccabe==0.7.0
+packaging==23.1
+pluggy==1.2.0
+pycodestyle==2.10.0
+pyflakes==3.0.1
+pytest==7.4.0
+sortedcontainers==2.4.0
