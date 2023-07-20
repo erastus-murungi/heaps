@@ -15,14 +15,31 @@ Value = TypeVar("Value")
 NodeType = TypeVar("NodeType", bound="AbstractNode")
 
 
+class PrettyStrMixin(ABC):
+    @abstractmethod
+    def pretty_str(self) -> str:
+        pass
+
+
+class PrettyLineYieldMixin(ABC):
+    @abstractmethod
+    def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
+        pass
+
+
 @dataclass(slots=True)
-class AbstractNode(Generic[Key, Value, NodeType]):
+class AbstractNode(
+    Generic[Key, Value, NodeType], PrettyStrMixin, PrettyLineYieldMixin, ABC
+):
     key: Key
     value: Value
 
     def swap_keys_and_values(self, other: AbstractNode) -> None:
         self.key, other.key = other.key, self.key
         self.value, other.value = other.value, self.value
+
+    def pretty_str(self) -> str:
+        return "".join(self.yield_line("", "R"))
 
 
 class HasNode(Generic[Key, Value, NodeType], ABC):

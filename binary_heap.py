@@ -3,9 +3,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from heapq import heapify, heappop, heappush, heapreplace
-from typing import Optional, TypeVar
+from typing import Iterator, Optional, TypeVar
 
-from core import AbstractNode, HasNode, Heap, Key, NodeType, Value
+from core import AbstractNode, HasNode, Heap, Key, NodeType, PrettyStrMixin, Value
 
 
 class BinaryHeap(Heap[Key, Value]):
@@ -34,27 +34,35 @@ class BinaryHeap(Heap[Key, Value]):
         return len(self.items)
 
 
-BinaryNodeType = TypeVar("BinaryNodeType", bound="NodeAbstract")
+BinaryNodeType = TypeVar("BinaryNodeType", bound="BinaryNodeAbstract")
 
 
 @abstractmethod
-class NodeAbstract(AbstractNode[Key, Value, BinaryNodeType], ABC):
+class BinaryNodeAbstract(AbstractNode[Key, Value, BinaryNodeType], ABC):
     left: BinaryNodeType | None = None
     right: BinaryNodeType | None = None
 
+    def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
+        yield f"{indent}{prefix}----{self}\n"
+        indent += "     " if prefix == "R" else "|    "
+        if self.left is not None:
+            yield from self.left.yield_line(indent, "L")
+        if self.right is not None:
+            yield from self.right.yield_line(indent, "R")
 
-class Node(NodeAbstract[Key, Value, "Node[Key, Value]"]):
+
+class Node(BinaryNodeAbstract[Key, Value, "Node[Key, Value]"]):
     pass
 
 
 @dataclass(slots=True)
-class NodeP(NodeAbstract[Key, Value, "NodeP[Key, Value]"]):
+class NodeP(BinaryNodeAbstract[Key, Value, "NodeP[Key, Value]"]):
     left: NodeP[Key, Value] | None = None
     right: NodeP[Key, Value] | None = None
     parent: NodeP[Key, Value] | None = None
 
 
-class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
+class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], PrettyStrMixin):
     def __init__(self, items: Optional[list[tuple[Key, Value]]] = None) -> None:
         self.root: Optional[NodeType] = None
         self.size: int = 0
@@ -77,7 +85,7 @@ class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
             self._push_node_non_empty(node)
 
     def _push_node_non_empty(self, node: NodeType) -> None:
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def decrease_key(self, node: NodeType, new_key: Key) -> None:
@@ -85,6 +93,12 @@ class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
 
     def __len__(self):
         return self.size
+
+    def pretty_str(self) -> str:
+        if self.root is not None:
+            return "".join(self.root.yield_line("", "R"))
+        else:
+            return "Nothing"
 
 
 class BinaryHeapTreeAbstract(HeapTree[Key, Value, BinaryNodeType], ABC):

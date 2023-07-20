@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import Optional
+from typing import Iterator, Optional
 
 from binary_heap import HeapTree
 from core import AbstractNode, Key, NodeType, Value
@@ -11,6 +11,12 @@ from core import AbstractNode, Key, NodeType, Value
 @dataclass(slots=True)
 class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
     sub_heaps: list[Node] = field(default_factory=list)
+
+    def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
+        yield f"{indent}{prefix}----{self}\n"
+        indent += "     " if prefix == "R" else "|    "
+        for index, sub_heap in enumerate(self.sub_heaps):
+            yield from sub_heap.yield_line(indent, f"S{index}")
 
 
 class PairingHeap(HeapTree[Key, Value, Node[Key, Value]]):
@@ -61,7 +67,7 @@ class PairingHeap(HeapTree[Key, Value, Node[Key, Value]]):
         return Node(key, value)
 
     def decrease_key(self, node: NodeType, new_key: Key) -> None:
-        raise NotImplemented
+        raise NotImplementedError
 
     def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        raise NotImplemented
+        raise NotImplementedError

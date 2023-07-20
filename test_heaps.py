@@ -3,12 +3,14 @@ from hypothesis import given
 from hypothesis.strategies import integers, lists
 
 from binary_heap import BinaryHeap, BinaryHeapTree, BinaryHeapTreeP
+from leftist_heap import LeftistHeap
 from pairing_heap import PairingHeap
 from skew_heap import SkewHeap
 
 
 @pytest.mark.parametrize(
-    "heap_class", [BinaryHeap, BinaryHeapTreeP, BinaryHeapTree, PairingHeap, SkewHeap]
+    "heap_class",
+    [BinaryHeap, BinaryHeapTreeP, BinaryHeapTree, PairingHeap, SkewHeap, LeftistHeap],
 )
 @given(lists(integers()))
 def test_sorted(heap_class, keys):
@@ -17,7 +19,8 @@ def test_sorted(heap_class, keys):
 
 
 @pytest.mark.parametrize(
-    "heap_class", [BinaryHeap, BinaryHeapTreeP, BinaryHeapTree, PairingHeap, SkewHeap]
+    "heap_class",
+    [BinaryHeap, BinaryHeapTreeP, BinaryHeapTree, PairingHeap, SkewHeap, LeftistHeap],
 )
 @given(lists(integers(), min_size=1))
 def test_min(heap_class, keys):
@@ -30,7 +33,8 @@ def test_min(heap_class, keys):
 
 
 @pytest.mark.parametrize(
-    "heap_class", [BinaryHeap, BinaryHeapTreeP, BinaryHeapTree, PairingHeap, SkewHeap]
+    "heap_class",
+    [BinaryHeap, BinaryHeapTreeP, BinaryHeapTree, PairingHeap, SkewHeap, LeftistHeap],
 )
 def test_empty_heap_find_min_raises(heap_class):
     heap = heap_class()

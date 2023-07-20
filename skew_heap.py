@@ -61,7 +61,7 @@ class SkewHeap(BinaryHeapTree[Key, Value]):
         return heap1
 
     def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        raise NotImplemented
+        raise NotImplementedError
 
     def decrease_key(self, node: Node[Key, Value], new_key: Key) -> None:
-        raise NotImplemented
+        raise NotImplementedError
