@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from heapq import heapify, heappop, heappush, heapreplace
-from typing import Optional
+from typing import Optional, TypeVar
 
 from core import AbstractNode, HasNode, Heap, Key, NodeType, Value
 
@@ -34,25 +34,30 @@ class BinaryHeap(Heap[Key, Value]):
         return len(self.items)
 
 
-class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
-    left: Node[Key, Value] | None = None
-    right: Node[Key, Value] | None = None
+BinaryNodeType = TypeVar("BinaryNodeType", bound="NodeAbstract")
+
+
+@abstractmethod
+class NodeAbstract(AbstractNode[Key, Value, BinaryNodeType], ABC):
+    left: BinaryNodeType | None = None
+    right: BinaryNodeType | None = None
+
+
+class Node(NodeAbstract[Key, Value, "Node[Key, Value]"]):
+    pass
 
 
 @dataclass(slots=True)
-class NodeP(AbstractNode[Key, Value, "NodeP[Key, Value]"]):
+class NodeP(NodeAbstract[Key, Value, "NodeP[Key, Value]"]):
     left: NodeP[Key, Value] | None = None
     right: NodeP[Key, Value] | None = None
     parent: NodeP[Key, Value] | None = None
 
 
 class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
-    root: Optional[NodeType]
-    size: int
-
     def __init__(self, items: Optional[list[tuple[Key, Value]]] = None) -> None:
-        self.root = None
-        self.size = 0
+        self.root: Optional[NodeType] = None
+        self.size: int = 0
         for key, value in items or []:
             self.push(key, value)
 
@@ -65,9 +70,14 @@ class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
         self._push_node(self._node(key, value))
         self.size += 1
 
-    @abstractmethod
     def _push_node(self, node: NodeType):
-        pass
+        if self.root is None:
+            self.root = node
+        else:
+            self._push_node_non_empty(node)
+
+    def _push_node_non_empty(self, node: NodeType) -> None:
+        raise NotImplemented
 
     @abstractmethod
     def decrease_key(self, node: NodeType, new_key: Key) -> None:
@@ -77,12 +87,12 @@ class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
         return self.size
 
 
-class BinaryHeapTreeAbstract(HeapTree[Key, Value], ABC):
+class BinaryHeapTreeAbstract(HeapTree[Key, Value, BinaryNodeType], ABC):
     def __contains__(self, __x: object) -> bool:
         if self.root is None:
             return False
         else:
-            nodes: list[NodeType] = [self.root]
+            nodes: list[BinaryNodeType] = [self.root]
             while nodes:
                 current = nodes.pop()
                 if current.key == __x:
@@ -94,7 +104,7 @@ class BinaryHeapTreeAbstract(HeapTree[Key, Value], ABC):
             return False
 
     @staticmethod
-    def _bubble_down(node: NodeType) -> None:
+    def _bubble_down(node: BinaryNodeType) -> None:
         while (
             node.left is not None
             and node.key > node.left.key
@@ -117,7 +127,7 @@ class BinaryHeapTreeAbstract(HeapTree[Key, Value], ABC):
             return key_value
         raise IndexError("Empty heap")
 
-    def decrease_key(self, node: NodeType, new_key: Key) -> None:
+    def decrease_key(self, node: BinaryNodeType, new_key: Key) -> None:
         node.key = new_key
         self._bubble_down(node)
 
@@ -132,20 +142,17 @@ class BinaryHeapTree(BinaryHeapTreeAbstract[Key, Value, Node[Key, Value]]):
             path.append(current)
         return path
 
-    def _push_node(self, node: Node[Key, Value]):
-        if self.root is None:
-            self.root = node
-        else:
-            path = self._get_leftmost_leaf_path()
-            current = path[-1]
-            current.left = node
-            while path:
-                parent = path.pop()
-                if parent.key > node.key:
-                    node.swap_keys_and_values(parent)
-                    node = parent
-                else:
-                    break
+    def _push_node_non_empty(self, node: Node[Key, Value]) -> None:
+        path = self._get_leftmost_leaf_path()
+        current = path[-1]
+        current.left = node
+        while path:
+            parent = path.pop()
+            if parent.key > node.key:
+                node.swap_keys_and_values(parent)
+                node = parent
+            else:
+                break
 
     def _remove_leaf_no_parent(self, path: list[Node[Key, Value]]):
         node = path.pop()
@@ -190,16 +197,12 @@ class BinaryHeapTreeP(BinaryHeapTreeAbstract[Key, Value, NodeP[Key, Value]]):
             node.swap_keys_and_values(node.parent)
             node = node.parent
 
-    def _push_node(self, node: NodeP[Key, Value]):
-        if self.root is None:
-            self.root = node
-        else:
-            # Add the element to the bottom level of the heap at the leftmost open space.
-            current = self._get_leftmost_leaf()
-            current.left = node
-            node.parent = current
-            # bubble up
-            self._bubble_up(node)
+    def _push_node_non_empty(self, node: NodeP[Key, Value]):
+        # Add the element to the bottom level of the heap at the leftmost open space.
+        current = self._get_leftmost_leaf()
+        current.left = node
+        node.parent = current
+        self._bubble_up(node)
 
     def remove_leaf(self, leaf: NodeP[Key, Value]):
         if leaf.parent is not None:

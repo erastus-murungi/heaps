@@ -13,7 +13,7 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
     sub_heaps: list[Node] = field(default_factory=list)
 
 
-class PairingHeap(HeapTree[Key, Value]):
+class PairingHeap(HeapTree[Key, Value, Node[Key, Value]]):
     @staticmethod
     def _meld(
         heap1: Optional[Node[Key, Value]], heap2: Optional[Node[Key, Value]]
@@ -54,10 +54,10 @@ class PairingHeap(HeapTree[Key, Value]):
                     nodes.extend(current.sub_heaps)
             return False
 
-    def _push_node(self, node: NodeType):
+    def _push_node(self, node: Node[Key, Value]):
         self.root = self._meld(self.root, node)
 
-    def _node(self, key: Key, value: Value) -> NodeType:
+    def _node(self, key: Key, value: Value) -> Node[Key, Value]:
         return Node(key, value)
 
     def decrease_key(self, node: NodeType, new_key: Key) -> None:
