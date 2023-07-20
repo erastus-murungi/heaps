@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from heapq import heapify, heappop, heappush, heapreplace
 from typing import Optional
 
-from core import Heap, Key, Value, AbstractNode, HasNode, NodeType
+from core import AbstractNode, HasNode, Heap, Key, NodeType, Value
 
 
 class BinaryHeap(Heap[Key, Value]):

@@ -5,7 +5,7 @@ from functools import reduce
 from typing import Optional
 
 from binary_heap import HeapTree
-from core import Key, Value, AbstractNode, NodeType
+from core import AbstractNode, Key, NodeType, Value
 
 
 @dataclass(slots=True)
