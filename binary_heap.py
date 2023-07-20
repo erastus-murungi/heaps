@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from heapq import heapify, heappop, heappush, heapreplace
-from typing import Optional, Generic, TypeVar
+from typing import Generic, Optional, TypeVar
 
 from core import Heap, Key, Value
 
@@ -71,9 +71,8 @@ class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
     def __init__(self, items: Optional[list[tuple[Key, Value]]] = None) -> None:
         self.root = None
         self.size = 0
-        if items is not None:
-            for key, value in items:
-                self._push_node(self._node(key, value))
+        for key, value in items or []:
+            self._push_node(self._node(key, value))
 
     @abstractmethod
     def _push_node(self, node: NodeType):
@@ -119,6 +118,15 @@ class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], ABC):
 
     def __len__(self) -> int:
         return self.size
+
+    def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
+        if self.root is not None:
+            root = self.root
+            key_value = root.key, root.value
+            root.key, root.value = key, value
+            self._bubble_down(root)
+            return key_value
+        raise IndexError("Empty heap")
 
 
 class BinaryHeapTree(HeapTree[Key, Value, Node[Key, Value]]):
@@ -175,15 +183,6 @@ class BinaryHeapTree(HeapTree[Key, Value, Node[Key, Value]]):
     def _node(self, key: Key, value: Value) -> Node[Key, Value]:
         return Node(key, value)
 
-    def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        if self.root is not None:
-            root = self.root
-            key_value = root.key, root.value
-            root.key, root.value = key, value
-            self._bubble_down(root)
-            return key_value
-        raise IndexError("Empty heap")
-
 
 class BinaryHeapTreeP(HeapTree[Key, Value, NodeP[Key, Value]]):
     def _get_leftmost_leaf(self) -> NodeP[Key, Value]:
@@ -232,15 +231,6 @@ class BinaryHeapTreeP(HeapTree[Key, Value, NodeP[Key, Value]]):
             self.size -= 1
             return key_value
         raise KeyError("Empty heap")
-
-    def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        if self.root is not None:
-            root = self.root
-            key_value = root.key, root.value
-            root.key, root.value = key, value
-            self._bubble_down(root)
-            return key_value
-        raise IndexError("Empty heap")
 
     def _node(self, key: Key, value: Value) -> NodeP[Key, Value]:
         return NodeP(key, value)
