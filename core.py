@@ -9,6 +9,9 @@ class Comparable(Protocol):
     def __lt__(self, other: Key) -> bool:
         pass
 
+    def __le__(self, other: Key) -> bool:
+        pass
+
 
 Key = TypeVar("Key", bound=Comparable)
 Value = TypeVar("Value")
