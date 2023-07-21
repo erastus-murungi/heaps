@@ -5,7 +5,7 @@ from binary_heap import BinaryHeapTreeAbstract, BinaryNodeAbstract
 from core import Key, Value
 
 
-@dataclass
+@dataclass(slots=True)
 class LeftistTreeNode(BinaryNodeAbstract[Key, Value, "LeftistTreeNode[Key, Value]"]):
     npl: int = 1
 

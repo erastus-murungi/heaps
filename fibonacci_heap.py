@@ -31,6 +31,7 @@ class FibonacciHeap(Heap[Key, Value]):
     Fibonacci heap implementation.
     Inspired by https://www.keithschwarz.com/interesting/code/?dir=fibonacci-heap
     """
+
     root: Optional[Node[Key, Value]]
     size: int
 
@@ -94,7 +95,7 @@ class FibonacciHeap(Heap[Key, Value]):
             # whether we're visiting the same node twice. To do this, we'll
             # spend a bit of overhead adding all the nodes to a list, and
             # then will visit each element of this list in order.
-            to_visit: deque[Optional[Node[Key, Value]]] = deque()
+            to_visit: deque[Node[Key, Value]] = deque()
 
             # To add everything, we'll iterate across the elements until we
             # find the first element twice. We check this by looping while the
@@ -274,21 +275,6 @@ class FibonacciHeapArray(Heap[Key, Value]):
         self.trees = self._merge(self.trees, min_node.children)
 
         if self.trees is not None:
-            # # consolidate the root list by joining trees of equal degree
-            # # (by creating a list of root nodes with distinct degrees)
-            # buckets: dict[int, list[Node[Key, Value]]] = defaultdict(list)
-            # work_list = []
-            # for tree in self.trees:
-            #     buckets[tree.degree].append(tree)
-            #     if len(buckets[tree.degree]) == 2:
-            #         work_list.append(buckets[tree.degree])
-            # while work_list:
-            #     trees = work_list.pop()
-            #     merged = link(*trees)
-            #     buckets[merged.degree].append(merged)
-            #     if len(buckets[merged.degree]) == 2:
-            #         work_list.append(buckets[merged.degree])
-            # assert all(len(buckets[degree]) <= 1 for degree in buckets)
 
             # consolidate the root list by joining trees of equal degree
             # (by creating a list of root nodes with distinct degrees)
@@ -309,7 +295,7 @@ class FibonacciHeapArray(Heap[Key, Value]):
             # find the first element twice. We check this by looping while the
             # list is empty or while the current element isn't the first element
             # of that list.
-            to_visit: deque[Optional[NodeL[Key, Value]]] = deque(self.trees)
+            to_visit: deque[NodeL[Key, Value]] = deque(self.trees)
 
             # Traverse this list and perform the appropriate union steps.
             for curr in to_visit:
@@ -338,6 +324,7 @@ class FibonacciHeapArray(Heap[Key, Value]):
                     # minimum and maximum and assigned different trees.
                     minimum = min(curr, other, key=attrgetter("key"))
                     maximum = max(other, curr, key=attrgetter("key"))
+                    assert minimum and maximum
 
                     # Break max out of the root list, then merge it into min's child list.
                     self.trees.remove(maximum)
@@ -355,7 +342,7 @@ class FibonacciHeapArray(Heap[Key, Value]):
                     minimum.degree += 1
 
                     # Continue merging this tree.
-                    curr = minimum  # noqa: PLW2901
+                    curr = minimum
         return min_node.key, min_node.value
 
     def __contains__(self, __x: object) -> bool:
@@ -396,10 +383,3 @@ class FibonacciHeapArray(Heap[Key, Value]):
             node.parent.marked = True
 
         node.parent = None
-
-
-if __name__ == "__main__":
-    keys = [0, 1, 2, 3, 4, 5, 6]
-    heap = FibonacciHeap([(k, None) for k in keys])
-    assert sorted(keys) == [key for key, _ in heap.sorted()]
-    print(heap)

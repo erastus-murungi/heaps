@@ -37,7 +37,7 @@ class BinaryHeap(Heap[Key, Value]):
 BinaryNodeType = TypeVar("BinaryNodeType", bound="BinaryNodeAbstract")
 
 
-@abstractmethod
+@dataclass(slots=True)
 class BinaryNodeAbstract(AbstractNode[Key, Value, BinaryNodeType], ABC):
     left: BinaryNodeType | None = None
     right: BinaryNodeType | None = None
@@ -51,6 +51,7 @@ class BinaryNodeAbstract(AbstractNode[Key, Value, BinaryNodeType], ABC):
             yield from self.right.yield_line(indent, "R")
 
 
+@dataclass(slots=True)
 class Node(BinaryNodeAbstract[Key, Value, "Node[Key, Value]"]):
     pass
 

@@ -8,7 +8,7 @@ from typing import Iterator, Optional
 from core import AbstractNode, Heap, Key, Value
 
 
-@dataclass
+@dataclass(slots=True)
 class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
     """
     A node in a binomial heap.
