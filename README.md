@@ -8,3 +8,4 @@ Implemented Heaps:
   - [Binary Heap](https://en.wikipedia.org/wiki/Binary_heap)
       - Tree version
       - Array version
+  - [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
