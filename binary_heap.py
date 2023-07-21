@@ -133,6 +133,22 @@ class BinaryHeapTreeAbstract(HeapTree[Key, Value, BinaryNodeType], ABC):
                 node = node.right
 
     def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
+        """
+        Pop the minimum key-value pair in the heap and push a new key-value pair
+        into the heap.
+
+        Parameters
+        ----------
+        key : Key
+            The key of the pair.
+        value : Value
+            The value of the pair.
+
+        Returns
+        -------
+        tuple[Key, Value]
+            The minimum key-value pair in the heap.
+        """
         if self.root is not None:
             root = self.root
             key_value = root.key, root.value

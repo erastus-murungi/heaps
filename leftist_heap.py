@@ -32,9 +32,6 @@ class LeftistHeap(BinaryHeapTreeAbstract[Key, Value, LeftistTreeNode[Key, Value]
             return key_value
         raise IndexError("Empty heap")
 
-    def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        raise NotImplementedError
-
     def _node(self, key: Key, value: Value) -> LeftistTreeNode[Key, Value]:
         return LeftistTreeNode(key, value)
 

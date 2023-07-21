@@ -68,6 +68,3 @@ class PairingHeap(HeapTree[Key, Value, Node[Key, Value]]):
 
     def decrease_key(self, node: NodeType, new_key: Key) -> None:
         raise NotImplementedError
-
-    def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        raise NotImplementedError
