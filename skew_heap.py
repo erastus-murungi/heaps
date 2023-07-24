@@ -1,18 +1,10 @@
 from typing import Optional
 
 from binary_heap import Node
-from core import Key, Value, SelfAdjustingHeap
+from core import Key, SelfAdjustingHeap, Value
 
 
 class SkewHeap(SelfAdjustingHeap[Key, Value, Node[Key, Value]]):
-    def extract_min(self) -> tuple[Key, Value]:
-        if self.root is not None:
-            key_value = self.root.key, self.root.value
-            self.root = self._merge(self.root.left, self.root.right)
-            self.size -= 1
-            return key_value
-        raise IndexError("Empty heap")
-
     def _merge(
         self, heap1: Optional[Node[Key, Value]], heap2: Optional[Node[Key, Value]]
     ) -> Optional[Node[Key, Value]]:

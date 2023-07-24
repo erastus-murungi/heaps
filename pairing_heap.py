@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import reduce
 from typing import Iterator, Optional
 
-from core import AbstractNode, Key, Value, SelfAdjustingHeap
+from core import AbstractNode, Key, SelfAdjustingHeap, Value
 
 
 @dataclass(slots=True)
@@ -36,14 +35,6 @@ class PairingHeap(SelfAdjustingHeap[Key, Value, Node[Key, Value]]):
         else:
             heap1.sub_heaps.append(heap2)
             return heap1
-
-    def extract_min(self) -> tuple[Key, Value]:
-        if self.root is not None:
-            key_value = self.root.key, self.root.value
-            self.root = reduce(self._merge, self.root.sub_heaps, None)
-            self.size -= 1
-            return key_value
-        raise IndexError("Empty heap")
 
     def _node(self, key: Key, value: Value) -> Node[Key, Value]:
         return Node(key, value)

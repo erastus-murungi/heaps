@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from binary_heap import BinaryNodeAbstract
-from core import Key, Value, SelfAdjustingHeap
+from core import Key, SelfAdjustingHeap, Value
 
 
 @dataclass(slots=True)
@@ -18,14 +18,6 @@ def null_path_length(node: Optional[LeftistTreeNode[Key, Value]]) -> int:
 
 
 class LeftistHeap(SelfAdjustingHeap[Key, Value, LeftistTreeNode[Key, Value]]):
-    def extract_min(self) -> tuple[Key, Value]:
-        if self.root is not None:
-            key_value = self.root.key, self.root.value
-            self.root = self._merge(self.root.left, self.root.right)
-            self.size -= 1
-            return key_value
-        raise IndexError("Empty heap")
-
     def _node(self, key: Key, value: Value) -> LeftistTreeNode[Key, Value]:
         return LeftistTreeNode(key, value)
 

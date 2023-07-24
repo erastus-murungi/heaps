@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from heapq import heapify, heappop, heappush, heapreplace
 from typing import Iterator, Optional, TypeVar
 
-from core import AbstractNode, Heap, Key, Value, HeapTree
+from core import AbstractNode, Heap, HeapTree, Key, Value
 
 
 class BinaryHeap(list[tuple[Key, Value]], Heap[Key, Value, None]):
@@ -146,6 +146,7 @@ class BinaryHeapTree(BinaryHeapTreeAbstract[Key, Value, Node[Key, Value]]):
                 node = parent
             else:
                 break
+        return self.root
 
     def _remove_leaf_no_parent(self, path: list[Node[Key, Value]]):
         node = path.pop()
@@ -190,12 +191,13 @@ class BinaryHeapTreeP(BinaryHeapTreeAbstract[Key, Value, NodeP[Key, Value]]):
             node.swap_keys_and_values(node.parent)
             node = node.parent
 
-    def _push_node_non_empty(self, node: NodeP[Key, Value]):
+    def _push_node_non_empty(self, node: NodeP[Key, Value]) -> NodeP[Key, Value]:
         # Add the element to the bottom level of the heap at the leftmost open space.
         current = self._get_leftmost_leaf()
         current.left = node
         node.parent = current
         self._bubble_up(node)
+        return self.root
 
     def remove_leaf(self, leaf: NodeP[Key, Value]):
         if leaf.parent is not None:

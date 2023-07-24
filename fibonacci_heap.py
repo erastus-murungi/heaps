@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from bisect import insort
 from collections import deque
+from dataclasses import dataclass, field
 from operator import attrgetter
 from typing import Iterator, Optional
 
-from core import AbstractNode, Key, Value, Heap
-from dataclasses import dataclass, field
+from core import AbstractNode, Heap, Key, Value
 
 
 @dataclass(slots=True)

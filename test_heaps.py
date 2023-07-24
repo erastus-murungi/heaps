@@ -1,14 +1,15 @@
+from random import randint
+
 import pytest
 from hypothesis import given
 from hypothesis.strategies import integers, lists
-from random import randint
 
 from binary_heap import BinaryHeap, BinaryHeapTree, BinaryHeapTreeP
 from binomial_heap import BinomialHeap
+from fibonacci_heap import FibonacciHeap, FibonacciHeapArray
 from leftist_heap import LeftistHeap
 from pairing_heap import PairingHeap
 from skew_heap import SkewHeap
-from fibonacci_heap import FibonacciHeap, FibonacciHeapArray
 
 
 @pytest.mark.parametrize(

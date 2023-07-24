@@ -57,20 +57,6 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         root.child = other
         return root
 
-    def iter_siblings(self) -> Iterator[Node[Key, Value]]:
-        """
-        Iterate over the siblings of the node.
-
-        Yields
-        ------
-        Node[Key, Value]
-            The siblings of the node.
-        """
-        node: Optional[Node[Key, Value]] = self
-        while node is not None:
-            yield node
-            node = node.sibling
-
     def children(self) -> Iterator[Node[Key, Value]]:
         """
         Iterate over the children of the node.
@@ -86,7 +72,10 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
             node = node.sibling
 
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
-        raise NotImplementedError
+        yield f"{indent}{prefix}----{self}\n"
+        indent += "     " if prefix == "R" else "|    "
+        for index, sub_heap in enumerate(self.children()):
+            yield from sub_heap.yield_line(indent, f"S{index}")
 
 
 class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
@@ -273,9 +262,6 @@ class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
             nodes.append(node.child)
             nodes.append(node.sibling)
         return False
-
-    def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        raise NotImplementedError
 
 
 if __name__ == "__main__":

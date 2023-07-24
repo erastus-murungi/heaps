@@ -2,15 +2,16 @@ from collections import defaultdict
 from pprint import pprint
 from random import randint
 from timeit import timeit
+
 import matplotlib.pyplot as plt  # type: ignore
 from matplotlib import rcParams  # type: ignore
 
 from binary_heap import BinaryHeap, BinaryHeapTree, BinaryHeapTreeP
 from binomial_heap import BinomialHeap
+from fibonacci_heap import FibonacciHeap, FibonacciHeapArray
 from leftist_heap import LeftistHeap
 from pairing_heap import PairingHeap
 from skew_heap import SkewHeap
-from fibonacci_heap import FibonacciHeap, FibonacciHeapArray
 
 rcParams.update({"font.size": 8})
 
@@ -44,12 +45,6 @@ def benchmark_many_consecutive_insertions() -> None:
                     number=2,
                 ),
             )
-    pprint(times)
-    # fig, axs = plt.subplots(len(times), 1)
-    # for ax, (labels, time_series) in zip(axs, times.items()):
-    #     ax.plot(time_series)
-    #     ax.set_title(labels)
-    # plt.show()
 
     for label, time_series in times.items():
         plt.plot(time_series, label=label)
@@ -75,7 +70,6 @@ def benchmark_many_consecutive_insertions_bars() -> None:
             )
         times.append(y_time)
     labels = [constructor.__name__ for constructor in ALL_CLASSES]
-    pprint(times)
     y_pos = list(range(len(labels)))
     fig, axs = plt.subplots(len(times), 1)
     for ax, time_series, n_insertions in zip(axs, times, insertions_range):

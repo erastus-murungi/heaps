@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Container, Generic, Iterator, Protocol, Sized, TypeVar, Optional
+from functools import reduce
+from typing import Container, Generic, Iterator, Optional, Protocol, Sized, TypeVar
 
 
 class Comparable(Protocol):
@@ -142,14 +143,15 @@ class HeapTree(
         self.size += 1
         return node
 
-    def _push_node(self, node: NodeType):
+    def _push_node(self, node: NodeType) -> None:
         if self.root is None:
-            self.root = node
+            self.root = node if self.root is None else self._push_node_non_empty(node)
         else:
-            self._push_node_non_empty(node)
+            self.root = self._push_node_non_empty(node)
 
-    def _push_node_non_empty(self, node: NodeType) -> None:
-        raise NotImplementedError
+    @abstractmethod
+    def _push_node_non_empty(self, node: NodeType) -> NodeType:
+        ...
 
     def __len__(self):
         return self.size
@@ -175,7 +177,15 @@ class HeapTree(
 
 class SelfAdjustingHeap(HeapTree[Key, Value, NodeType], ABC):
     def _push_node_non_empty(self, node: NodeType) -> None:
-        self.root = self._merge(self.root, node)
+        return self._merge(self.root, node)
+
+    def extract_min(self) -> tuple[Key, Value]:
+        if self.root is not None:
+            key_value = self.root.key, self.root.value
+            self.root = reduce(self._merge, self.root.children(), None)
+            self.size -= 1
+            return key_value
+        raise IndexError("Empty heap")
 
     def _merge(
         self, heap1: Optional[NodeType], heap2: Optional[NodeType]
