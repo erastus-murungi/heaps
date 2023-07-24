@@ -91,3 +91,45 @@ def test_empty_heap_find_min_raises(heap_class):
     heap = heap_class()
     with pytest.raises(IndexError):
         heap.find_min()
+
+
+@pytest.mark.parametrize(
+    "heap_class",
+    [
+        BinaryHeap,
+        BinaryHeapTreeP,
+        BinaryHeapTree,
+        PairingHeap,
+        SkewHeap,
+        LeftistHeap,
+        BinomialHeap,
+        FibonacciHeap,
+        FibonacciHeapArray,
+    ],
+)
+@given(lists(integers()))
+def test_contains(heap_class, keys):
+    heap = heap_class([(k, None) for k in keys])
+    for key in keys:
+        assert key in heap
+
+
+@pytest.mark.parametrize(
+    "heap_class",
+    [
+        BinaryHeap,
+        BinaryHeapTreeP,
+        BinaryHeapTree,
+        PairingHeap,
+        SkewHeap,
+        LeftistHeap,
+        BinomialHeap,
+        FibonacciHeap,
+        FibonacciHeapArray,
+    ],
+)
+@given(lists(integers()))
+def test_not_contains(heap_class, keys):
+    heap = heap_class()
+    for key in keys:
+        assert key not in heap

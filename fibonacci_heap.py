@@ -167,7 +167,15 @@ class FibonacciHeap(Heap[Key, Value]):
         return min_node.key, min_node.value
 
     def __contains__(self, __x: object) -> bool:
-        raise NotImplementedError
+        nodes = [self.root]
+        while nodes:
+            node = nodes.pop()
+            if node is None:
+                continue
+            if node.key == __x:
+                return True
+            nodes.append(node.child)
+            nodes.append(node.next)
 
     def __len__(self) -> int:
         return self.size
@@ -345,7 +353,15 @@ class FibonacciHeapArray(Heap[Key, Value]):
         return min_node.key, min_node.value
 
     def __contains__(self, __x: object) -> bool:
-        raise NotImplementedError
+        nodes = self.trees[:]
+        while nodes:
+            node = nodes.pop()
+            if node is None:
+                continue
+            if node.key == __x:
+                return True
+            nodes.extend(node.children)
+        return False
 
     def __len__(self) -> int:
         return self.size
