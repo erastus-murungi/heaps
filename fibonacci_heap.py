@@ -275,7 +275,6 @@ class FibonacciHeapArray(Heap[Key, Value]):
         self.trees = self._merge(self.trees, min_node.children)
 
         if self.trees is not None:
-
             # consolidate the root list by joining trees of equal degree
             # (by creating a list of root nodes with distinct degrees)
             # Next, we need to coalesce all the roots so that there is only one

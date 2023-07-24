@@ -23,13 +23,11 @@ class PairingHeap(HeapTree[Key, Value, Node[Key, Value]]):
     @staticmethod
     def _meld(
         heap1: Optional[Node[Key, Value]], heap2: Optional[Node[Key, Value]]
-    ) -> Node[Key, Value]:
+    ) -> Optional[Node[Key, Value]]:
         # assert heap1 or heap2
         if heap1 is None:
-            assert heap2 is not None
             return heap2
         elif heap2 is None:
-            assert heap1 is not None
             return heap1
         elif heap1.key > heap2.key:
             heap2.sub_heaps.append(heap1)
