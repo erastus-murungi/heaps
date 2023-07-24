@@ -135,7 +135,7 @@ class BinaryHeapTree(BinaryHeapTreeAbstract[Key, Value, Node[Key, Value]]):
             path.append(current)
         return path
 
-    def _push_node_non_empty(self, node: Node[Key, Value]) -> None:
+    def _push_node_non_empty(self, node: Node[Key, Value]) -> Node[Key, Value]:
         path = self._get_leftmost_leaf_path()
         current = path[-1]
         current.left = node
@@ -146,6 +146,7 @@ class BinaryHeapTree(BinaryHeapTreeAbstract[Key, Value, Node[Key, Value]]):
                 node = parent
             else:
                 break
+        assert self.root is not None
         return self.root
 
     def _remove_leaf_no_parent(self, path: list[Node[Key, Value]]):
@@ -197,6 +198,7 @@ class BinaryHeapTreeP(BinaryHeapTreeAbstract[Key, Value, NodeP[Key, Value]]):
         current.left = node
         node.parent = current
         self._bubble_up(node)
+        assert self.root is not None
         return self.root
 
     def remove_leaf(self, leaf: NodeP[Key, Value]):

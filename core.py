@@ -176,8 +176,10 @@ class HeapTree(
 
 
 class SelfAdjustingHeap(HeapTree[Key, Value, NodeType], ABC):
-    def _push_node_non_empty(self, node: NodeType) -> None:
-        return self._merge(self.root, node)
+    def _push_node_non_empty(self, node: NodeType) -> NodeType:
+        root = self._merge(self.root, node)
+        assert root is not None
+        return root
 
     def extract_min(self) -> tuple[Key, Value]:
         if self.root is not None:
