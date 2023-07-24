@@ -1,22 +1,19 @@
 from typing import Optional
 
-from binary_heap import BinaryHeapTree, Node
-from core import Key, Value
+from binary_heap import Node
+from core import Key, Value, SelfAdjustingHeap
 
 
-class SkewHeap(BinaryHeapTree[Key, Value]):
-    def _push_node(self, node: Node[Key, Value]):
-        self.root = self._skew_merge(self.root, node)
+class SkewHeap(SelfAdjustingHeap[Key, Value, Node[Key, Value]]):
+    def extract_min(self) -> tuple[Key, Value]:
+        if self.root is not None:
+            key_value = self.root.key, self.root.value
+            self.root = self._merge(self.root.left, self.root.right)
+            self.size -= 1
+            return key_value
+        raise IndexError("Empty heap")
 
-    def pop(self) -> tuple[Key, Value]:
-        if self.root is None:
-            raise IndexError("Empty heap")
-        key_value = self.root.key, self.root.value
-        self.root = self._skew_merge(self.root.left, self.root.right)
-        self.size -= 1
-        return key_value
-
-    def _skew_merge(
+    def _merge(
         self, heap1: Optional[Node[Key, Value]], heap2: Optional[Node[Key, Value]]
     ) -> Optional[Node[Key, Value]]:
         """
@@ -56,9 +53,9 @@ class SkewHeap(BinaryHeapTree[Key, Value]):
         # we traverse the right paths of heap1 and heap2,
         # merging them into a single increasing path
         # the left subtrees of nodes along the merged path do not change
-        heap1.left, heap1.right = self._skew_merge(heap1.right, heap2), heap1.left
+        heap1.left, heap1.right = self._merge(heap1.right, heap2), heap1.left
 
         return heap1
 
-    def decrease_key(self, node: Node[Key, Value], new_key: Key) -> None:
-        raise NotImplementedError
+    def _node(self, key: Key, value: Value) -> Node[Key, Value]:
+        return Node(key, value)

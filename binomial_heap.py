@@ -71,17 +71,31 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
             yield node
             node = node.sibling
 
+    def children(self) -> Iterator[Node[Key, Value]]:
+        """
+        Iterate over the children of the node.
+
+        Yields
+        ------
+        Node[Key, Value]
+            The siblings of the node.
+        """
+        node: Optional[Node[Key, Value]] = self.child
+        while node is not None:
+            yield node
+            node = node.sibling
+
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
         raise NotImplementedError
 
 
-class BinomialHeap(Heap[Key, Value]):
+class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
     def __init__(self, items: list[tuple[Key, Value]] | None = None) -> None:
         self.trees: list[Node[Key, Value] | None] = []
         self.size: int = 0
 
         for key, value in items or []:
-            self.push(key, value)
+            self.enqueue(key, value)
 
     @staticmethod
     def _one_bit_full_adder(
@@ -94,7 +108,7 @@ class BinomialHeap(Heap[Key, Value]):
 
         References
         ----------
-        .. [1] http://web.mit.edu/6.111/www/f2017/handouts/L08.pdf
+        .. [1] https://web.mit.edu/6.111/www/f2017/handouts/L08.pdf
         """
         if a is None:
             if b is None and carry is None:
@@ -146,7 +160,7 @@ class BinomialHeap(Heap[Key, Value]):
 
         We treat the tree at index i in the list as a binary number. The tree
         at index has 2^i nodes. We add the two lists together by adding the binary numbers together. The result is a
-        list of binomial trees with no more than one tree of each order. We go from least significant bit to most
+        list of binomial trees with no more than one tree of each order. We go from the least significant bit to most
         significant bit, and we keep track of the carry.
 
 
@@ -169,7 +183,7 @@ class BinomialHeap(Heap[Key, Value]):
             result.append(carry)
         return result
 
-    def push(self, key: Key, value: Value):
+    def enqueue(self, key: Key, value: Value) -> Node[Key, Value]:
         """
         Insert a new element into the Binomial heap.
 
@@ -185,8 +199,10 @@ class BinomialHeap(Heap[Key, Value]):
         This operation is O(log n) where n is the number of elements in the heap.
         Works by simply adding a 'least significant packet' to the root list.
         """
-        self.trees = self._add_root_lists(self.trees, [Node[Key, Value](key, value)])
+        node = Node[Key, Value](key, value)
+        self.trees = self._add_root_lists(self.trees, [node])
         self.size += 1
+        return node
 
     def find_min(self) -> tuple[Key, Value]:
         """
@@ -214,7 +230,7 @@ class BinomialHeap(Heap[Key, Value]):
         min_node = min(filter(None, self.trees), key=attrgetter("key"))
         return min_node.key, min_node.value
 
-    def pop(self) -> tuple[Key, Value]:
+    def extract_min(self) -> tuple[Key, Value]:
         if not self.trees:
             raise IndexError("Heap is empty.")
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Container, Generic, Iterator, Protocol, Sized, TypeVar
+from typing import Container, Generic, Iterator, Protocol, Sized, TypeVar, Optional
 
 
 class Comparable(Protocol):
@@ -44,6 +44,10 @@ class AbstractNode(
     def pretty_str(self) -> str:
         return "".join(self.yield_line("", "R"))
 
+    @abstractmethod
+    def children(self) -> Iterator[NodeType]:
+        pass
+
 
 class HasNode(Generic[Key, Value, NodeType], ABC):
     @abstractmethod
@@ -70,9 +74,12 @@ class HeapQueryTrait(Generic[Key, Value], ABC):
         pass
 
 
-class HeapMutationTrait(Generic[Key, Value], ABC):
+T = TypeVar("T")
+
+
+class HeapMutationTrait(Generic[Key, Value, T], ABC):
     @abstractmethod
-    def push(self, key: Key, value: Value) -> None:
+    def enqueue(self, key: Key, value: Value) -> T:
         """
         Push a key-value pair into the heap.
 
@@ -86,9 +93,9 @@ class HeapMutationTrait(Generic[Key, Value], ABC):
         pass
 
     @abstractmethod
-    def pop(self) -> tuple[Key, Value]:
+    def extract_min(self) -> tuple[Key, Value]:
         """
-        Pop the minimum key-value pair in the heap.
+        Extract the minimum key-value pair in the heap.
 
         Returns
         -------
@@ -105,11 +112,72 @@ class HeapMutationTrait(Generic[Key, Value], ABC):
 
 class Heap(
     HeapQueryTrait[Key, Value],
-    HeapMutationTrait[Key, Value],
+    HeapMutationTrait[Key, Value, T],
     Container[Key],
     Sized,
     ABC,
 ):
     def sorted(self) -> Iterator[tuple[Key, Value]]:
         while len(self) > 0:
-            yield self.pop()
+            yield self.extract_min()
+
+
+class HeapTree(
+    Heap[Key, Value, NodeType], HasNode[Key, Value, NodeType], PrettyStrMixin
+):
+    def __init__(self, items: Optional[list[tuple[Key, Value]]] = None) -> None:
+        self.root: Optional[NodeType] = None
+        self.size: int = 0
+        for key, value in items or []:
+            self.enqueue(key, value)
+
+    def find_min(self) -> tuple[Key, Value]:
+        if self.root is None:
+            raise IndexError("Empty heap")
+        return self.root.key, self.root.value
+
+    def enqueue(self, key: Key, value: Value) -> NodeType:
+        node = self._node(key, value)
+        self._push_node(node)
+        self.size += 1
+        return node
+
+    def _push_node(self, node: NodeType):
+        if self.root is None:
+            self.root = node
+        else:
+            self._push_node_non_empty(node)
+
+    def _push_node_non_empty(self, node: NodeType) -> None:
+        raise NotImplementedError
+
+    def __len__(self):
+        return self.size
+
+    def pretty_str(self) -> str:
+        if self.root is not None:
+            return "".join(self.root.yield_line("", "R"))
+        else:
+            return "Nothing"
+
+    def __contains__(self, __x: object) -> bool:
+        if self.root is None:
+            return False
+        else:
+            nodes: list[NodeType] = [self.root]
+            while nodes:
+                current = nodes.pop()
+                if current.key == __x:
+                    return True
+                nodes.extend(current.children())
+            return False
+
+
+class SelfAdjustingHeap(HeapTree[Key, Value, NodeType], ABC):
+    def _push_node_non_empty(self, node: NodeType) -> None:
+        self.root = self._merge(self.root, node)
+
+    def _merge(
+        self, heap1: Optional[NodeType], heap2: Optional[NodeType]
+    ) -> Optional[NodeType]:
+        pass

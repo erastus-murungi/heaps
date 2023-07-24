@@ -24,9 +24,26 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
         raise NotImplementedError
 
+    def children(self) -> Iterator[Node[Key, Value]]:
+        """
+        Iterate over the children of the node.
+
+        Yields
+        ------
+        Node[Key, Value]
+            The siblings of the node.
+        """
+        curr = self.child
+        if curr is not None:
+            while True:
+                yield curr
+                curr = curr.next
+                if curr is self.child:
+                    break
+
 
 @dataclass(slots=True, init=False)
-class FibonacciHeap(Heap[Key, Value]):
+class FibonacciHeap(Heap[Key, Value, Node[Key, Value]]):
     """
     Fibonacci heap implementation.
     Inspired by https://www.keithschwarz.com/interesting/code/?dir=fibonacci-heap
@@ -40,19 +57,20 @@ class FibonacciHeap(Heap[Key, Value]):
         self.size = 0
 
         for key, value in items or []:
-            self.push(key, value)
+            self.enqueue(key, value)
 
     def find_min(self) -> tuple[Key, Value]:
         if not self.root:
             raise IndexError("Empty heap")
         return self.root.key, self.root.value
 
-    def push(self, key: Key, value: Value) -> None:
+    def enqueue(self, key: Key, value: Value) -> Node[Key, Value]:
         node = Node(key, value)
         self.root = self._merge_circular_doubly_linked_lists(self.root, node)
         self.size += 1
+        return node
 
-    def pop(self) -> tuple[Key, Value]:
+    def extract_min(self) -> tuple[Key, Value]:
         if self.root is None:
             raise IndexError("Empty heap")
 
@@ -176,6 +194,7 @@ class FibonacciHeap(Heap[Key, Value]):
                 return True
             nodes.append(node.child)
             nodes.append(node.next)
+        return False
 
     def __len__(self) -> int:
         return self.size
@@ -237,14 +256,17 @@ class NodeL(AbstractNode[Key, Value, "NodeL[Key, Value]"]):
     degree: int = 0
     marked: bool = False
     parent: Optional[NodeL[Key, Value]] = field(default=None, init=False, repr=False)
-    children: list[NodeL[Key, Value]] = field(default_factory=list)
+    children_: list[NodeL[Key, Value]] = field(default_factory=list)
 
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
         raise NotImplementedError
 
+    def children(self) -> Iterator[NodeL[Key, Value]]:
+        yield from self.children_
+
 
 @dataclass(slots=True, init=False)
-class FibonacciHeapArray(Heap[Key, Value]):
+class FibonacciHeapArray(Heap[Key, Value, NodeL[Key, Value]]):
     trees: list[NodeL[Key, Value]]
     size: int
 
@@ -253,7 +275,7 @@ class FibonacciHeapArray(Heap[Key, Value]):
         self.size = 0
 
         for key, value in items or []:
-            self.push(key, value)
+            self.enqueue(key, value)
 
     def find_min(self) -> tuple[Key, Value]:
         if not self.trees:
@@ -261,12 +283,13 @@ class FibonacciHeapArray(Heap[Key, Value]):
         min_node = self.trees[-1]
         return min_node.key, min_node.value
 
-    def push(self, key: Key, value: Value) -> None:
-        node = NodeL(key, value)
+    def enqueue(self, key: Key, value: Value) -> NodeL[Key, Value]:
+        node = NodeL[Key, Value](key, value)
         self.trees = self._merge(self.trees, [node])
         self.size += 1
+        return node
 
-    def pop(self) -> tuple[Key, Value]:
+    def extract_min(self) -> tuple[Key, Value]:
         if not self.trees:
             raise IndexError("Empty heap")
 
@@ -276,11 +299,11 @@ class FibonacciHeapArray(Heap[Key, Value]):
 
         # clear the parent field for all the minimum node's children
         # since they are about to become roots
-        for child in min_node.children:
+        for child in min_node.children_:
             child.parent = None
 
         # merge the children of the minimum node with the root list
-        self.trees = self._merge(self.trees, min_node.children)
+        self.trees = self._merge(self.trees, min_node.children_)
 
         if self.trees is not None:
             # consolidate the root list by joining trees of equal degree
@@ -337,7 +360,7 @@ class FibonacciHeapArray(Heap[Key, Value]):
                     self.trees.remove(maximum)
 
                     # TODO: optimize to O(1)
-                    insort(minimum.children, maximum, key=attrgetter("key"))
+                    insort(minimum.children_, maximum, key=attrgetter("key"))
 
                     # Re-parent maximum appropriately.
                     maximum.parent = minimum
@@ -360,7 +383,7 @@ class FibonacciHeapArray(Heap[Key, Value]):
                 continue
             if node.key == __x:
                 return True
-            nodes.extend(node.children)
+            nodes.extend(node.children_)
         return False
 
     def __len__(self) -> int:
@@ -383,7 +406,7 @@ class FibonacciHeapArray(Heap[Key, Value]):
             return None
 
         # if the node has siblings, splice it out
-        node.parent.children.remove(node)
+        node.parent.children_.remove(node)
 
         # decrement the degree of the parent, since we just removed a child
         node.parent.degree -= 1

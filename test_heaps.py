@@ -69,7 +69,7 @@ def test_min(heap_class, keys):
     keys.sort(reverse=True)
     while keys:
         assert keys[-1] == heap.find_min()[0]
-        heap.pop()
+        heap.extract_min()
         keys.pop()
 
 

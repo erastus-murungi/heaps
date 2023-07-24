@@ -1,37 +1,32 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
 from heapq import heapify, heappop, heappush, heapreplace
 from typing import Iterator, Optional, TypeVar
 
-from core import AbstractNode, HasNode, Heap, Key, NodeType, PrettyStrMixin, Value
+from core import AbstractNode, Heap, Key, Value, HeapTree
 
 
-class BinaryHeap(Heap[Key, Value]):
-    items: list[tuple[Key, Value]]
-
+class BinaryHeap(list[tuple[Key, Value]], Heap[Key, Value, None]):
     def __init__(self, items: Optional[list[tuple[Key, Value]]] = None) -> None:
-        self.items = items if items else []
-        heapify(self.items)
+        super().__init__(items if items else [])
+        heapify(self)
 
     def find_min(self) -> tuple[Key, Value]:
-        return self.items[0]
+        return self[0]
 
-    def push(self, key: Key, value: Value) -> None:
-        heappush(self.items, (key, value))
+    def enqueue(self, key: Key, value: Value) -> None:
+        heappush(self, (key, value))
 
-    def pop(self) -> tuple[Key, Value]:
-        return heappop(self.items)
+    def extract_min(self) -> tuple[Key, Value]:
+        return heappop(self)
 
     def replace(self, key: Key, value: Value) -> tuple[Key, Value]:
-        return heapreplace(self.items, (key, value))
+        return heapreplace(self, (key, value))
 
     def __contains__(self, __x: object) -> bool:
-        return any(key == __x for key, _ in self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
+        return any(key == __x for key, _ in self)
 
 
 BinaryNodeType = TypeVar("BinaryNodeType", bound="BinaryNodeAbstract")
@@ -50,6 +45,12 @@ class BinaryNodeAbstract(AbstractNode[Key, Value, BinaryNodeType], ABC):
         if self.right is not None:
             yield from self.right.yield_line(indent, "R")
 
+    def children(self) -> Iterator[BinaryNodeType]:
+        if self.left is not None:
+            yield self.left
+        if self.right is not None:
+            yield self.right
+
 
 @dataclass(slots=True)
 class Node(BinaryNodeAbstract[Key, Value, "Node[Key, Value]"]):
@@ -61,45 +62,6 @@ class NodeP(BinaryNodeAbstract[Key, Value, "NodeP[Key, Value]"]):
     left: NodeP[Key, Value] | None = None
     right: NodeP[Key, Value] | None = None
     parent: NodeP[Key, Value] | None = None
-
-
-class HeapTree(Heap[Key, Value], HasNode[Key, Value, NodeType], PrettyStrMixin):
-    def __init__(self, items: Optional[list[tuple[Key, Value]]] = None) -> None:
-        self.root: Optional[NodeType] = None
-        self.size: int = 0
-        for key, value in items or []:
-            self.push(key, value)
-
-    def find_min(self) -> tuple[Key, Value]:
-        if self.root is None:
-            raise IndexError("Empty heap")
-        return self.root.key, self.root.value
-
-    def push(self, key: Key, value: Value) -> None:
-        self._push_node(self._node(key, value))
-        self.size += 1
-
-    def _push_node(self, node: NodeType):
-        if self.root is None:
-            self.root = node
-        else:
-            self._push_node_non_empty(node)
-
-    def _push_node_non_empty(self, node: NodeType) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def decrease_key(self, node: NodeType, new_key: Key) -> None:
-        pass
-
-    def __len__(self):
-        return self.size
-
-    def pretty_str(self) -> str:
-        if self.root is not None:
-            return "".join(self.root.yield_line("", "R"))
-        else:
-            return "Nothing"
 
 
 class BinaryHeapTreeAbstract(HeapTree[Key, Value, BinaryNodeType], ABC):
@@ -196,7 +158,7 @@ class BinaryHeapTree(BinaryHeapTreeAbstract[Key, Value, Node[Key, Value]]):
         else:
             self.root = None
 
-    def pop(self) -> tuple[Key, Value]:
+    def extract_min(self) -> tuple[Key, Value]:
         if self.root is not None:
             path = self._get_leftmost_leaf_path()
             leaf = path[-1]
@@ -244,7 +206,7 @@ class BinaryHeapTreeP(BinaryHeapTreeAbstract[Key, Value, NodeP[Key, Value]]):
         else:
             self.root = None
 
-    def pop(self) -> tuple[Key, Value]:
+    def extract_min(self) -> tuple[Key, Value]:
         if self.root is not None:
             leaf = self._get_leftmost_leaf()
             root = self.root
