@@ -24,7 +24,7 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
         raise NotImplementedError
 
-    def children(self) -> Iterator[Node[Key, Value]]:
+    def iter_children(self) -> Iterator[Node[Key, Value]]:
         """
         Iterate over the children of the node.
 
@@ -261,7 +261,7 @@ class NodeL(AbstractNode[Key, Value, "NodeL[Key, Value]"]):
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
         raise NotImplementedError
 
-    def children(self) -> Iterator[NodeL[Key, Value]]:
+    def iter_children(self) -> Iterator[NodeL[Key, Value]]:
         yield from self.children_
 
 

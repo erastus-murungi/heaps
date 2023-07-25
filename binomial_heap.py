@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import zip_longest
 from operator import attrgetter
 from typing import Iterator, Optional
@@ -27,8 +27,8 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         If the node is the rightmost child of its parent,then sibling is None.
     """
 
-    child: Optional[Node[Key, Value]] = None
-    sibling: Optional[Node[Key, Value]] = None
+    child: Optional[Node[Key, Value]] = field(default=None, repr=False)
+    sibling: Optional[Node[Key, Value]] = field(default=None, repr=False)
 
     def link(self, other: Node[Key, Value]) -> Node[Key, Value]:
         """
@@ -42,7 +42,7 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         Returns
         -------
         Node[Key, Value]
-            The root of the resulting tree.
+            The root of the resulting tree, which is the root with the smaller key.
 
         Notes
         ------
@@ -57,7 +57,7 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         root.child = other
         return root
 
-    def children(self) -> Iterator[Node[Key, Value]]:
+    def iter_children(self) -> Iterator[Node[Key, Value]]:
         """
         Iterate over the children of the node.
 
@@ -74,7 +74,7 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
         yield f"{indent}{prefix}----{self}\n"
         indent += "     " if prefix == "R" else "|    "
-        for index, sub_heap in enumerate(self.children()):
+        for index, sub_heap in enumerate(self.iter_children()):
             yield from sub_heap.yield_line(indent, f"S{index}")
 
 

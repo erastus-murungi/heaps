@@ -16,7 +16,7 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         for index, sub_heap in enumerate(self.sub_heaps):
             yield from sub_heap.yield_line(indent, f"S{index}")
 
-    def children(self) -> Iterator[Node[Key, Value]]:
+    def iter_children(self) -> Iterator[Node[Key, Value]]:
         yield from self.sub_heaps
 
 

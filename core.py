@@ -46,7 +46,7 @@ class AbstractNode(
         return "".join(self.yield_line("", "R"))
 
     @abstractmethod
-    def children(self) -> Iterator[NodeType]:
+    def iter_children(self) -> Iterator[NodeType]:
         pass
 
 
@@ -171,7 +171,7 @@ class HeapTree(
                 current = nodes.pop()
                 if current.key == __x:
                     return True
-                nodes.extend(current.children())
+                nodes.extend(current.iter_children())
             return False
 
 
@@ -184,7 +184,7 @@ class SelfAdjustingHeap(HeapTree[Key, Value, NodeType], ABC):
     def extract_min(self) -> tuple[Key, Value]:
         if self.root is not None:
             key_value = self.root.key, self.root.value
-            self.root = reduce(self._merge, self.root.children(), None)
+            self.root = reduce(self._merge, self.root.iter_children(), None)
             self.size -= 1
             return key_value
         raise IndexError("Empty heap")

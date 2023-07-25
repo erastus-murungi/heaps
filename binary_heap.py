@@ -45,7 +45,7 @@ class BinaryNodeAbstract(AbstractNode[Key, Value, BinaryNodeType], ABC):
         if self.right is not None:
             yield from self.right.yield_line(indent, "R")
 
-    def children(self) -> Iterator[BinaryNodeType]:
+    def iter_children(self) -> Iterator[BinaryNodeType]:
         if self.left is not None:
             yield self.left
         if self.right is not None:
