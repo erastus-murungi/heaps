@@ -11,6 +11,7 @@ from binomial_heap import BinomialHeap
 from fibonacci_heap import FibonacciHeap, FibonacciHeapArray
 from leftist_heap import LeftistHeap
 from pairing_heap import PairingHeap
+from skew_binomial_heap import SkewBinomialHeap
 from skew_heap import SkewHeap
 
 rcParams.update({"font.size": 8})
@@ -21,7 +22,7 @@ def run_sort(heap_class, keys):
     assert sorted(keys) == [key for key, _ in heap.sorted()]
 
 
-ALL_CLASSES = [
+ALL_CLASSES = (
     BinaryHeap,
     BinaryHeapTreeP,
     BinaryHeapTree,
@@ -31,14 +32,23 @@ ALL_CLASSES = [
     BinomialHeap,
     FibonacciHeap,
     FibonacciHeapArray,
-]
+    SkewBinomialHeap,
+)
+
+ALL_CLASSES_NO_BIN = (
+    BinaryHeap,
+    SkewHeap,
+    LeftistHeap,
+    BinomialHeap,
+    SkewBinomialHeap,
+)
 
 
-def benchmark_many_consecutive_insertions() -> None:
+def benchmark_many_consecutive_insertions(classes=ALL_CLASSES_NO_BIN) -> None:
     times = defaultdict(list)
-    for n_insertions in range(1, 2000, 500):
+    for n_insertions in range(0, 20_001, 4_000):
         keys = [randint(-100_000_000, 100_000_000) for _ in range(n_insertions)]
-        for constructor in ALL_CLASSES:
+        for constructor in classes:
             times[constructor.__name__].append(
                 timeit(
                     lambda: run_sort(constructor, keys),
@@ -55,13 +65,13 @@ def benchmark_many_consecutive_insertions() -> None:
     plt.show()
 
 
-def benchmark_many_consecutive_insertions_bars() -> None:
+def benchmark_many_consecutive_insertions_bars(classes=ALL_CLASSES_NO_BIN) -> None:
     times = []
-    insertions_range = list(range(1, 2000, 500))
+    insertions_range = list(range(1, 3000, 500))
     for n_insertions in insertions_range:
         keys = [randint(-100_000_000, 100_000_000) for _ in range(n_insertions)]
         y_time = []
-        for constructor in ALL_CLASSES:
+        for constructor in classes:
             y_time.append(
                 timeit(
                     lambda: run_sort(constructor, keys),
@@ -69,7 +79,7 @@ def benchmark_many_consecutive_insertions_bars() -> None:
                 ),
             )
         times.append(y_time)
-    labels = [constructor.__name__ for constructor in ALL_CLASSES]
+    labels = [constructor.__name__ for constructor in classes]
     y_pos = list(range(len(labels)))
     fig, axs = plt.subplots(len(times), 1)
     for ax, time_series, n_insertions in zip(axs, times, insertions_range):
@@ -81,4 +91,4 @@ def benchmark_many_consecutive_insertions_bars() -> None:
 
 
 if __name__ == "__main__":
-    benchmark_many_consecutive_insertions_bars()
+    benchmark_many_consecutive_insertions()

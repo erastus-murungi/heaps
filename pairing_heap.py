@@ -24,7 +24,6 @@ class PairingHeap(SelfAdjustingHeap[Key, Value, Node[Key, Value]]):
     def _merge(
         self, heap1: Optional[Node[Key, Value]], heap2: Optional[Node[Key, Value]]
     ) -> Optional[Node[Key, Value]]:
-        # assert heap1 or heap2
         if heap1 is None:
             return heap2
         elif heap2 is None:

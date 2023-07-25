@@ -9,8 +9,8 @@ from binomial_heap import BinomialHeap
 from fibonacci_heap import FibonacciHeap, FibonacciHeapArray
 from leftist_heap import LeftistHeap
 from pairing_heap import PairingHeap
-from skew_heap import SkewHeap
 from skew_binomial_heap import SkewBinomialHeap
+from skew_heap import SkewHeap
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,7 @@ def test_sorted_legacy():
         BinomialHeap,
         FibonacciHeap,
         FibonacciHeapArray,
-        SkewBinomialHeap
+        SkewBinomialHeap,
     ]
     keys = [randint(-100_000_000, 100_000_000) for _ in range(1_000)]
     for heap_class in heap_classes:
@@ -65,7 +65,7 @@ def test_sorted_legacy():
         BinomialHeap,
         FibonacciHeap,
         FibonacciHeapArray,
-        SkewBinomialHeap
+        SkewBinomialHeap,
     ],
 )
 @given(lists(integers(), min_size=1))
@@ -90,6 +90,7 @@ def test_min(heap_class, keys):
         BinomialHeap,
         FibonacciHeap,
         FibonacciHeapArray,
+        SkewBinomialHeap,
     ],
 )
 def test_empty_heap_find_min_raises(heap_class):
@@ -110,6 +111,7 @@ def test_empty_heap_find_min_raises(heap_class):
         BinomialHeap,
         FibonacciHeap,
         FibonacciHeapArray,
+        SkewBinomialHeap,
     ],
 )
 @given(lists(integers()))

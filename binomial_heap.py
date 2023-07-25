@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from itertools import zip_longest
 from operator import attrgetter
-from typing import Iterator, Optional
+from typing import Iterator, Optional, TypeVar
 
 from core import AbstractNode, Heap, Key, Value
 
+BinomialTreeType = TypeVar("BinomialTreeType", bound="NodeAbstract")
+
 
 @dataclass(slots=True)
-class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
+class NodeAbstract(AbstractNode[Key, Value, BinomialTreeType]):
     """
     A node in a binomial heap.
 
@@ -27,10 +30,10 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         If the node is the rightmost child of its parent,then sibling is None.
     """
 
-    child: Optional[Node[Key, Value]] = field(default=None, repr=False)
-    sibling: Optional[Node[Key, Value]] = field(default=None, repr=False)
+    child: Optional[BinomialTreeType] = field(default=None, repr=False)
+    sibling: Optional[BinomialTreeType] = field(default=None, repr=False)
 
-    def link(self, other: Node[Key, Value]) -> Node[Key, Value]:
+    def link(self: BinomialTreeType, other: BinomialTreeType) -> BinomialTreeType:
         """
         Links two binomial trees of the same order together.
 
@@ -57,7 +60,18 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         root.child = other
         return root
 
-    def iter_children(self) -> Iterator[Node[Key, Value]]:
+    def fracture_node(self) -> list[BinomialTreeType]:
+        fractures = []
+        current_child = self.child
+
+        while current_child is not None:
+            fractures.append(current_child)
+            nxt_child = current_child.sibling
+            current_child.sibling = None
+            current_child = nxt_child
+        return fractures
+
+    def iter_children(self) -> Iterator[BinomialTreeType]:
         """
         Iterate over the children of the node.
 
@@ -66,7 +80,7 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
         Node[Key, Value]
             The siblings of the node.
         """
-        node: Optional[Node[Key, Value]] = self.child
+        node: Optional[BinomialTreeType] = self.child
         while node is not None:
             yield node
             node = node.sibling
@@ -78,20 +92,20 @@ class Node(AbstractNode[Key, Value, "Node[Key, Value]"]):
             yield from sub_heap.yield_line(indent, f"S{index}")
 
 
-class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
+class BinomialHeapAbstract(Heap[Key, Value, BinomialTreeType]):
     def __init__(self, items: list[tuple[Key, Value]] | None = None) -> None:
-        self.trees: list[Node[Key, Value] | None] = []
+        self.trees: list[Optional[BinomialTreeType]] = []
         self.size: int = 0
 
         for key, value in items or []:
             self.enqueue(key, value)
 
-    @staticmethod
     def _one_bit_full_adder(
-        a: Optional[Node[Key, Value]],
-        b: Optional[Node[Key, Value]],
-        carry: Optional[Node[Key, Value]],
-    ) -> tuple[Optional[Node[Key, Value]], Optional[Node[Key, Value]]]:
+        self,
+        a: Optional[BinomialTreeType],
+        b: Optional[BinomialTreeType],
+        carry: Optional[BinomialTreeType],
+    ) -> tuple[Optional[BinomialTreeType], Optional[BinomialTreeType]]:
         """
         Add three nodes ('bits') together using a full adder
 
@@ -122,10 +136,11 @@ class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
             else:
                 return carry, a.link(b)
 
-    @staticmethod
     def _add_root_lists(
-        list1: list[Node[Key, Value] | None], list2: list[Node[Key, Value] | None]
-    ) -> list[Node[Key, Value] | None]:
+        self,
+        list1: list[Optional[BinomialTreeType]],
+        list2: list[Optional[BinomialTreeType]],
+    ) -> list[Optional[BinomialTreeType]]:
         """
         Adds two lists of binomial trees together.
 
@@ -160,11 +175,11 @@ class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
 
         """
 
-        result: list[Node[Key, Value] | None] = []
-        carry: Node[Key, Value] | None = None
+        result: list[Optional[BinomialTreeType]] = []
+        carry: Optional[BinomialTreeType] = None
 
         for top, low in zip_longest(list1, list2):
-            t, carry = BinomialHeap._one_bit_full_adder(top, low, carry)
+            t, carry = self._one_bit_full_adder(top, low, carry)
             result.append(t)
 
         # Finally, if the carry is set, append it to the result.
@@ -172,7 +187,7 @@ class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
             result.append(carry)
         return result
 
-    def enqueue(self, key: Key, value: Value) -> Node[Key, Value]:
+    def enqueue(self, key: Key, value: Value) -> BinomialTreeType:
         """
         Insert a new element into the Binomial heap.
 
@@ -188,7 +203,7 @@ class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
         This operation is O(log n) where n is the number of elements in the heap.
         Works by simply adding a 'least significant packet' to the root list.
         """
-        node = Node[Key, Value](key, value)
+        node = self._node(key, value)
         self.trees = self._add_root_lists(self.trees, [node])
         self.size += 1
         return node
@@ -226,16 +241,7 @@ class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
         min_node = min(filter(None, self.trees), key=attrgetter("key"))
         min_node_index = self.trees.index(min_node)
 
-        # fracture the packet
-        fractures: list[Node[Key, Value] | None] = []
-        current_child = min_node.child
-
-        while current_child is not None:
-            fractures.append(current_child)
-            nxt_child = current_child.sibling
-            current_child.sibling = None
-            current_child = nxt_child
-
+        fractures = min_node.fracture_node()
         self.trees.pop(min_node_index)
 
         # remove any trailing None values
@@ -262,6 +268,20 @@ class BinomialHeap(Heap[Key, Value, Node[Key, Value]]):
             nodes.append(node.child)
             nodes.append(node.sibling)
         return False
+
+    @abstractmethod
+    def _node(self, key: Key, value: Value) -> BinomialTreeType:
+        pass
+
+
+@dataclass(slots=True)
+class Node(NodeAbstract[Key, Value, "Node[Key, Value]"]):
+    pass
+
+
+class BinomialHeap(BinomialHeapAbstract[Key, Value, Node[Key, Value]]):
+    def _node(self, key: Key, value: Value) -> Node[Key, Value]:
+        return Node(key, value)
 
 
 if __name__ == "__main__":
