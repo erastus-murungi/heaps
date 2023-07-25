@@ -256,13 +256,13 @@ class NodeL(AbstractNode[Key, Value, "NodeL[Key, Value]"]):
     degree: int = 0
     marked: bool = False
     parent: Optional[NodeL[Key, Value]] = field(default=None, init=False, repr=False)
-    children_: list[NodeL[Key, Value]] = field(default_factory=list)
+    children: list[NodeL[Key, Value]] = field(default_factory=list)
 
     def yield_line(self, indent: str, prefix: str) -> Iterator[str]:
         raise NotImplementedError
 
     def iter_children(self) -> Iterator[NodeL[Key, Value]]:
-        yield from self.children_
+        yield from self.children
 
 
 @dataclass(slots=True, init=False)
@@ -299,11 +299,11 @@ class FibonacciHeapArray(Heap[Key, Value, NodeL[Key, Value]]):
 
         # clear the parent field for all the minimum node's children
         # since they are about to become roots
-        for child in min_node.children_:
+        for child in min_node.children:
             child.parent = None
 
         # merge the children of the minimum node with the root list
-        self.trees = self._merge(self.trees, min_node.children_)
+        self.trees = self._merge(self.trees, min_node.children)
 
         if self.trees is not None:
             # consolidate the root list by joining trees of equal degree
@@ -360,7 +360,7 @@ class FibonacciHeapArray(Heap[Key, Value, NodeL[Key, Value]]):
                     self.trees.remove(maximum)
 
                     # TODO: optimize to O(1)
-                    insort(minimum.children_, maximum, key=attrgetter("key"))
+                    insort(minimum.children, maximum, key=attrgetter("key"))
 
                     # Re-parent maximum appropriately.
                     maximum.parent = minimum
@@ -383,7 +383,7 @@ class FibonacciHeapArray(Heap[Key, Value, NodeL[Key, Value]]):
                 continue
             if node.key == __x:
                 return True
-            nodes.extend(node.children_)
+            nodes.extend(node.children)
         return False
 
     def __len__(self) -> int:
@@ -406,7 +406,7 @@ class FibonacciHeapArray(Heap[Key, Value, NodeL[Key, Value]]):
             return None
 
         # if the node has siblings, splice it out
-        node.parent.children_.remove(node)
+        node.parent.children.remove(node)
 
         # decrement the degree of the parent, since we just removed a child
         node.parent.degree -= 1

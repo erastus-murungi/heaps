@@ -46,7 +46,7 @@ ALL_CLASSES_NO_BIN = (
 
 def benchmark_many_consecutive_insertions(classes=ALL_CLASSES_NO_BIN) -> None:
     times = defaultdict(list)
-    for n_insertions in range(0, 20_001, 4_000):
+    for n_insertions in range(0, 30_001, 5_000):
         keys = [randint(-100_000_000, 100_000_000) for _ in range(n_insertions)]
         for constructor in classes:
             times[constructor.__name__].append(

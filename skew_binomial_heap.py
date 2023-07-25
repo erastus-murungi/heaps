@@ -47,15 +47,15 @@ class Node(BinomialNode[Key, Value, "Node[Key, Value]"]):
 
 @dataclass(slots=True, init=False)
 class SkewBinomialHeap(BinomialHeap[Key, Value, Node[Key, Value]]):
-    trees: list[Node[Key, Value]]  # type: ignore
+    forest: list[Node[Key, Value]]  # type: ignore
     size: int
 
     def _insert_singleton(self, node: Node[Key, Value]) -> None:
-        if len(self.trees) >= 2 and self.trees[-2].order == self.trees[-1].order:
-            first, second = self.trees.pop(), self.trees.pop()
-            self.trees.append(first.skew_link(second, node))
+        if len(self.forest) >= 2 and self.forest[-2].order == self.forest[-1].order:
+            first, second = self.forest.pop(), self.forest.pop()
+            self.forest.append(first.skew_link(second, node))
         else:
-            self.trees.append(node)
+            self.forest.append(node)
 
     @staticmethod
     def _merge_by_order(
@@ -103,35 +103,51 @@ class SkewBinomialHeap(BinomialHeap[Key, Value, Node[Key, Value]]):
                 order += 1
 
     @staticmethod
-    def _normalize(trees: list[Node[Key, Value]]) -> None:
-        while len(trees) >= 2 and trees[-2].order == trees[-1].order:
-            first, second = trees.pop(), trees.pop()
-            trees.append(first.link(second))
+    def _normalize(*forests: list[Node[Key, Value]]) -> None:
+        for forest in forests:
+            while len(forest) >= 2 and forest[-2].order == forest[-1].order:
+                first, second = forest.pop(), forest.pop()
+                forest.append(first.link(second))
+
+    @staticmethod
+    def _extract_singletons(*forests: list[Node[Key, Value]]) -> list[Node[Key, Value]]:
+        singletons = []
+        for forest in forests:
+            while forest and forest[-1].order == 0:
+                singletons.append(forest.pop())
+        return singletons
+
+    def _get_min_node_index(self) -> int:
+        if self.forest:
+            min_node_index = 0
+            for i in range(1, len(self.forest)):
+                if self.forest[i].key < self.forest[min_node_index].key:
+                    min_node_index = i
+            return min_node_index
+        raise IndexError("Heap is empty.")
+
+    def _insert_singletons(self, singletons: list[Node[Key, Value]]) -> None:
+        for singleton in singletons:
+            self._insert_singleton(singleton)
 
     def extract_min(self) -> tuple[Key, Value]:
-        if self.trees:
-            min_node = min(filter(None, self.trees), key=attrgetter("key"))
-            min_node_index = self.trees.index(min_node)
-
+        if self.forest:
+            min_node_index = self._get_min_node_index()
+            min_node = self.forest[min_node_index]
             # fracture the packet
             fractures: list[Node[Key, Value]] = min_node.fracture_node()
-            self.trees.pop(min_node_index)
+            self.forest.pop(min_node_index)
 
             # ensure that the fractures are in monotonically increasing order
             fractures.sort(key=attrgetter("order"), reverse=True)
-            trees = self.trees
-            singletons = []
-            while trees and trees[-1].order == 0:
-                singletons.append(trees.pop())
-            while fractures and fractures[-1].order == 0:
-                singletons.append(fractures.pop())
-            self._normalize(trees)
-            self._normalize(fractures)
+
+            singletons = self._extract_singletons(self.forest, fractures)
+            self._normalize(self.forest, fractures)
 
             result: list[Node[Key, Value]] = []
             carry: Node[Key, Value] | None = None
 
-            for top, low in self._merge_by_order(trees, fractures):
+            for top, low in self._merge_by_order(self.forest, fractures):
                 t, carry = self._one_bit_full_adder(top, low, carry)
                 if t is not None:
                     result.append(t)
@@ -140,11 +156,9 @@ class SkewBinomialHeap(BinomialHeap[Key, Value, Node[Key, Value]]):
             if carry is not None:
                 result.append(carry)
             result.reverse()
-            self.trees = result
-            for s in singletons:
-                self._insert_singleton(s)
+            self.forest = result
+            self._insert_singletons(singletons)
             self.size -= 1
-            # print(heap.pretty_str())
             return min_node.key, min_node.value
         raise IndexError("Heap is empty.")
 
@@ -162,41 +176,20 @@ class SkewBinomialHeap(BinomialHeap[Key, Value, Node[Key, Value]]):
         return "".join(
             chain.from_iterable(
                 tree.yield_line(indent, f"T{index}")
-                for index, tree in enumerate(self.trees)
+                for index, tree in enumerate(self.forest)
                 if tree is not None
             )
         )
 
     def validate(self):
-        assert is_sorted([tree.order for tree in self.trees])
-        # no trees have the same rank except for at most one pair
-        if len(self.trees) <= 1:
+        assert is_sorted([tree.order for tree in self.forest])
+        # no forest have the same rank except for at most one pair
+        if len(self.forest) <= 1:
             return
         if len(self) > 2:
             assert (
-                len(set(tree.order for tree in self.trees[:-2])) == len(self.trees) - 2
+                len(set(tree.order for tree in self.forest[:-2])) == len(self.forest) - 2
             )
 
     def _node(self, key: Key, value: Value) -> Node[Key, Value]:
         return Node(key, value)
-
-
-# if __name__ == "__main__":
-#     from random import randint, seed
-#
-#     seed(0)
-#     for _ in range(10000):
-#         keys = [885440, 403958, 794772, 933488, 441001, 42450, 271493, 536110, 509532, 424604, 962838, 821872, 870163,
-#                 318046,
-#                 499748]
-#         # keys = [randint(0, 1000000) for _ in range(15)]
-#         #     print(len(keys))
-#         print(keys)
-#         heap = SkewBinomialHeap([(key, key) for key in keys])
-#         print(heap.pretty_str())
-#         # print(heap.find_min())
-#         assert heap.find_min()[0] == min(keys)
-#         assert sorted(keys) == [key for key, _ in heap.sorted()]
-#         # print(log2(len(keys)), len(heap.trees))
-#         # print([tree.order for tree in heap.trees])
-#         heap.validate()

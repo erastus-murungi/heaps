@@ -94,7 +94,7 @@ class NodeAbstract(AbstractNode[Key, Value, BinomialTreeType]):
 
 class BinomialHeapAbstract(Heap[Key, Value, BinomialTreeType]):
     def __init__(self, items: list[tuple[Key, Value]] | None = None) -> None:
-        self.trees: list[Optional[BinomialTreeType]] = []
+        self.forest: list[Optional[BinomialTreeType]] = []
         self.size: int = 0
 
         for key, value in items or []:
@@ -204,7 +204,7 @@ class BinomialHeapAbstract(Heap[Key, Value, BinomialTreeType]):
         Works by simply adding a 'least significant packet' to the root list.
         """
         node = self._node(key, value)
-        self.trees = self._add_root_lists(self.trees, [node])
+        self.forest = self._add_root_lists(self.forest, [node])
         self.size += 1
         return node
 
@@ -229,28 +229,28 @@ class BinomialHeapAbstract(Heap[Key, Value, BinomialTreeType]):
 
         """
 
-        if not self.trees:
+        if not self.forest:
             raise IndexError("Heap is empty.")
-        min_node = min(filter(None, self.trees), key=attrgetter("key"))
+        min_node = min(filter(None, self.forest), key=attrgetter("key"))
         return min_node.key, min_node.value
 
     def extract_min(self) -> tuple[Key, Value]:
-        if not self.trees:
+        if not self.forest:
             raise IndexError("Heap is empty.")
 
-        min_node = min(filter(None, self.trees), key=attrgetter("key"))
-        min_node_index = self.trees.index(min_node)
+        min_node = min(filter(None, self.forest), key=attrgetter("key"))
+        min_node_index = self.forest.index(min_node)
 
         fractures = min_node.fracture_node()
-        self.trees.pop(min_node_index)
+        self.forest.pop(min_node_index)
 
         # remove any trailing None values
-        while self.trees and self.trees[-1] is None:
-            self.trees.pop()
+        while self.forest and self.forest[-1] is None:
+            self.forest.pop()
 
         # ensure that the fractures are in monotonically increasing order
         fractures.reverse()
-        self.trees = self._add_root_lists(self.trees, fractures)
+        self.forest = self._add_root_lists(self.forest, fractures)
         self.size -= 1
         return min_node.key, min_node.value
 
@@ -258,7 +258,7 @@ class BinomialHeapAbstract(Heap[Key, Value, BinomialTreeType]):
         return self.size
 
     def __contains__(self, item: object) -> bool:
-        nodes = self.trees[:]
+        nodes = self.forest[:]
         while nodes:
             node = nodes.pop()
             if node is None:

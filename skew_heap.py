@@ -33,6 +33,7 @@ class SkewHeap(SelfAdjustingHeap[Key, Value, Node[Key, Value]]):
         .. [2] https://www.cs.usfca.edu/~galles/visualization/SkewHeap.html
         .. [3] https://www.cs.cmu.edu/~sleator/papers/adjusting-heaps.pdf
         """
+
         if heap1 is None:
             return heap2
         if heap2 is None:
