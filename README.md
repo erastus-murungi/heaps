@@ -10,6 +10,7 @@ Implemented Heaps:
       - Array version
   - [Binomial Heap](https://en.wikipedia.org/wiki/Binomial_heap)
   - [Fibonacci Heap](https://en.wikipedia.org/wiki/Fibonacci_heap)
+  - [Skew binomial Heap](https://www.brics.dk/RS/96/37/BRICS-RS-96-37.pdf)
 
 Perf results
 ![Figure_1](https://github.com/erastus-murungi/heaps/assets/21957448/68d9266f-f6d7-49f1-948c-a5e9bf7c56e4)
